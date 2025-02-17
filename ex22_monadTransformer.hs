@@ -42,14 +42,14 @@ instance (Monad m) => Monad (EitherT e m) where
 -- ContT r m a, wrapping m (r -> a)
 newtype ContT r m a = ContT { runContT :: (a -> m r) -> m r }
 
-instance Functor (ContT r m) where
+instance Functor m => Functor (ContT r m) where
     fmap f (ContT c) = ContT $ \k -> c (k . f)
 
-instance Applicative (ContT r m) where
-    pure a = ContT ($ a)
-    (ContT cf) <*> (ContT ca) = ContT $ \k -> cf (\f -> ca (\a -> k (f a)))
+instance Applicative m => Applicative (ContT r m) where
+    pure a = ContT (\k -> k a)
+    (ContT cf) <*> (ContT ca) = ContT $ \k -> cf (\f -> ca (k . f))
 
-instance Monad (ContT r m) where
+instance Monad m => Monad (ContT r m) where
     return = pure
     (ContT ca) >>= f = ContT $ \k -> ca (\a -> runContT (f a) k)
 
